@@ -5,7 +5,6 @@ The partially forced Kuramoto model of coupled oscillators, in addition to heter
 
 $$
 \dot{\theta}_n(t)=\omega_{n}+ F\delta_{n,C}sin(\theta_n+\sigma t) +\epsilon_{i}(t)+\frac{K}{N} \sum_{m=1}^{N} W \sin \left(\theta_{m}(t-\tau_{mn})-\theta_{n}(t-\tau_{nn})\right),
-\label{eq:ForcedKuramotoNoise}
 $$
 
 ## Project Structure

@@ -8,7 +8,7 @@ import numpy as np
 import numpy.linalg as linalg
 import scipy.signal as signal
 import scipy.ndimage as ndimage
-
+from scipy.spatial.distance import jensenshannon
 
 
 def effectiveFrequency(x,T):
@@ -527,3 +527,97 @@ def spectralComplexity(Pxx,communities=None):
         for k,key in enumerate(communities.keys()):
             C+=np.sum(H[communities[key]])-(k+1)/n*np.sum(H)
     return C
+
+def pearson_correlation(spec1: list[float], spec2: list[float]) -> float:
+    """
+    Calculates the Pearson correlation coefficient between two spectra.
+    Returns a value between -1 (perfect negative correlation) and 1 (perfect positive correlation).
+
+    Parameters
+    ----------
+    spec1 : list[float]
+        DESCRIPTION.
+    spec2 : list[float]
+        DESCRIPTION.
+
+    Returns
+    -------
+    float
+        DESCRIPTION.
+
+    Raises
+    ------
+    ValueError
+        DESCRIPTION.
+    """
+    
+    if len(spec1) != len(spec2):
+        raise ValueError("Error: Los espectros deben tener la misma longitud.")
+    # np.corrcoef devuelve una matriz de correlación; extraemos el valor fuera de la diagonal.
+    return np.corrcoef(spec1, spec2)[0, 1]
+
+def jensen_shannon_distance(spec1: list[float], spec2: list[float]) -> float | None:
+    """
+    Calculates the Jensen-Shannon Distance (JSD) between two spectra.
+    Normaliza los espectros a distribuciones de probabilidad antes del cálculo.
+
+    Parameters
+    ----------
+    spec1 : list[float]
+        DESCRIPTION.
+    spec2 : list[float]
+        DESCRIPTION.
+
+    Returns
+    -------
+    float | None
+        DESCRIPTION.
+    """
+    
+    try:
+        # Normalizar para obtener distribuciones de probabilidad P y Q
+        p = np.asarray(spec1) / np.sum(np.abs(np.asarray(spec1)))
+        q = np.asarray(spec2) / np.sum(np.abs(np.asarray(spec2)))
+        # scipy.spatial.distance.jensenshannon devuelve la raíz cuadrada de la JSD, que se usa como métrica de distancia.
+        return jensenshannon(p, q)
+    except Exception as e:
+        print(f"Error al calcular la Distancia de Jensen-Shannon: {e}")
+        return None
+
+def log_spectral_distance(spec1: list[float], spec2: list[float]) -> float:
+    """
+    Calculates the Log-Spectral Distance between two spectra.
+    Formula: Sum(|log(|S1|) - log(|S2|)|)
+    A small epsilon is added to prevent log(0) errors.
+
+    Parameters
+    ----------
+    spec1 : list[float]
+        DESCRIPTION.
+    spec2 : list[float]
+        DESCRIPTION.
+
+    Returns
+    -------
+    float
+        DESCRIPTION.
+
+    Raises
+    ------
+    ValueError
+        DESCRIPTION.
+    """
+    
+    s1 = np.asarray(spec1)
+    s2 = np.asarray(spec2)
+
+    if len(s1) != len(s2):
+        raise ValueError("Error: Los espectros deben tener la misma longitud.")
+
+    # Añadir un pequeño epsilon para evitar log(0)
+    epsilon = 1e-9
+    log_s1 = np.log(np.abs(s1) + epsilon)
+    log_s2 = np.log(np.abs(s2) + epsilon)
+
+    # Calcular la suma de las diferencias absolutas de los logaritmos
+    return np.sum(np.abs(log_s1 - log_s2))
